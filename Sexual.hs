@@ -30,8 +30,10 @@ fitnessTo target test = 28 - (sum $ map (\x -> if x == True then 1 else 0) $ zip
 
 -- Now we can create a random population of size N.
 
-generatePopulation :: Int -> Weasel [DNA]
-generatePopulation n = sequence $ replicate n randomDNA
+generatePopulation :: Weasel [DNA]
+generatePopulation = do
+  n <- totalPopulation
+  sequence $ replicate n randomDNA
 
 -- Once we have a population we can select the top N most fit.
 
@@ -77,5 +79,5 @@ simulation n population = do
 -- Let's make the main:
 
 main = do
-  initialPopulation <- generatePopulation 100
+  initialPopulation <- generatePopulation
   simulation 1 initialPopulation

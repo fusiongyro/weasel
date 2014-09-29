@@ -1,7 +1,8 @@
 module Main where
 
 import Meta
-import Classic
+import qualified Classic
+import qualified Sexual
 
 import Control.Monad
 import Control.Monad.Reader
@@ -47,6 +48,12 @@ parseOptions args = do
 main = do
   args <- getArgs
   options <- parseOptions args
-  when (pMode options == HelpMode) showHelp
-  runReaderT (randomDNA >>= simulate 1) options
+  execute options
+
+execute :: Parameters -> IO ()
+execute (Param {pMode = HelpMode}) = showHelp
+execute options@(Param {pMode = ClassicMode}) = runReaderT (randomDNA >>= Classic.simulate 1) options
+execute options@(Param {pMode = SexualReproductionMode}) = do
+  runReaderT (Sexual.generatePopulation >>= Sexual.simulation 1) options
+  
 
