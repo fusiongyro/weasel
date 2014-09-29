@@ -13,7 +13,7 @@ import System.Random
 
 type DNA = String
 
-data Mode = ClassicMode | SexualReproductionMode
+data Mode = ClassicMode | SexualReproductionMode | HelpMode
           deriving (Show, Read, Eq)
 
 data Parameters = Param { pTotalPopulation :: Int
@@ -31,35 +31,36 @@ defaultParameters = Param { pTotalPopulation = 100
                           , pMode            = ClassicMode
                           }
 
-commandLineOptions :: [OptDescr (Parameters -> IO Parameters)]
+commandLineOptions :: [OptDescr (Parameters -> Parameters)]
 commandLineOptions = [
-  Option "h" ["help"]          (NoArg  showHelp)                        "show this help, then exit",
+  Option "h" ["help"]          (NoArg  helpOption)                      "show this help, then exit",
   Option "p" ["population"]    (ReqArg populationOption   "POPULATION") "the number of organisms to keep per generation",
   Option "t" ["target"]        (ReqArg targetOption       "TARGET")     "the target string of DNA to shoot for",
   Option "f" ["fit-cutoff"]    (ReqArg cutoffOption       "CUTOFF")     "the number of organisms to consider 'fit' for reproduction",
   Option "r" ["mutation-rate"] (ReqArg mutationRateOption "RATE")       "the mutation rate to use (e.g.: 0.05)",
   Option "m" ["mode"]          (ReqArg modeOption         "MODE")       "the mode to execute"]
 
-showHelp :: Parameters -> IO Parameters
-showHelp    opts = do
+helpOption :: Parameters -> Parameters
+helpOption opts = opts { pMode = HelpMode }
+
+showHelp :: IO ()
+showHelp = do
   prog <- getProgName
   putStrLn $ usageInfo ("Usage: " ++ prog ++ " [OPTIONS]...") commandLineOptions
-  _ <- exitWith ExitSuccess
-  return opts
+  exitSuccess
 
-populationOption, targetOption, cutoffOption, mutationRateOption, modeOption :: String -> Parameters -> IO Parameters
-populationOption   value p = return $ p { pTotalPopulation = read value } 
-targetOption       value p = return $ p { pTarget          = value      }
-cutoffOption       value p = return $ p { pFitCutoff       = read value }
-mutationRateOption value p = return $ p { pMutationRate    = read value }
-modeOption         value p = return $ p { pMode            = read value }
+populationOption, targetOption, cutoffOption, mutationRateOption, modeOption :: String -> Parameters -> Parameters
+populationOption   value p = p { pTotalPopulation = read value } 
+targetOption       value p = p { pTarget          = value      }
+cutoffOption       value p = p { pFitCutoff       = read value }
+mutationRateOption value p = p { pMutationRate    = read value }
+modeOption         value p = p { pMode            = read value }
 
 parseOptions :: [String] -> IO Parameters
 parseOptions args = do
   case getOpt RequireOrder commandLineOptions args of
-    (opts, args',   []) -> foldl (>>=) (return defaultParameters) opts
+    (opts, args',   []) -> return $ foldl (flip ($)) defaultParameters opts
     (   _,     _, errs) -> putStrLn (concat errs) >> exitFailure
-
 
 type Weasel = ReaderT Parameters IO
 
@@ -166,5 +167,6 @@ simulate n currentBest = do
 main = do
   args <- getArgs
   options <- parseOptions args
+  when (pMode options == HelpMode) showHelp
   runReaderT (randomDNA >>= simulate 1) options
 
