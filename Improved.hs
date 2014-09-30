@@ -58,16 +58,21 @@ weaselEvolver :: (EvolutionaryAlgorithm ea) => ea -> DNA -> IO Int
 weaselEvolver ea target = do
   -- generate the initial population
   initialPopulation <- generatePopulation ea (length target)
+  
   -- begin the loop at generation 1
   evolve 1 initialPopulation
+  
   where
     evolve generation population = do
       -- select the fittest
-      fittest        <- selectFittest ea target population
+      fittest <- selectFittest ea target population
+      
       -- output a status message
       logStatus generation target fittest
-      -- generate the next population
+      
+      -- generate the next population by breeding the fittest
       nextPopulation <- breed ea fittest
+      
       -- if we have found the target, we are done; otherwise recur
       if head fittest == target
         then return generation
@@ -100,9 +105,11 @@ fitnessTo left right = sum $ zipWith score left right
 
 -- | Sorts the DNA by fitness.
 sortByFitness :: DNA -> [DNA] -> [DNA]
-sortByFitness target = reverse . sortBy (compare `on` fitnessTo target)
+                       -- Higher scores are better, which is why we
+                       -- need to flip the list over after sorting
+sortByFitness target = reverse . sortBy (compare `on` fitnessTo target) 
 
--- | Combinations. Needed for sexual reproduction.
+-- | Combinations. Needed for sexual reproduction. Code stolen from H99 solutions.
 combinations :: Int -> [a] -> [[a]]
 combinations 0 _  = [[]]
 combinations n xs = [ y:ys | y:xs' <- tails xs
@@ -119,6 +126,7 @@ instance EvolutionaryAlgorithm ClassicWeasel where
   generatePopulation ea length = do
     -- make a random initial DNA
     initialDNA <- randomDNA length
+    
     -- replicate it as many times as we want
     return $ replicate (cPopulation ea) initialDNA
   
@@ -150,9 +158,16 @@ instance EvolutionaryAlgorithm SexualWeasel where
     return $ take (sFitCutoff ea) $ sortByFitness target population
 
   breed ea fittest = do
-    -- first, create all the partnerships and breed the number we need
-    newPopulation <- mapM reproduceWith' $ take (sPopulation ea) $ cycle $ combinations 2 fittest
-    -- now effect mutation upon them
+    -- first, create all the partnerships and breed the number we
+    -- need. Cycle is here to make the list infinitely long so we get
+    -- additional pairings as needed (will depend on what the fitness
+    -- cutoff number is)
+    let pairings = take (sPopulation ea) $ cycle $ combinations 2 fittest
+
+    -- perform the reproductions
+    newPopulation <- mapM reproduceWith' pairings
+
+    -- now effect mutation upon their hapless souls
     mutateAll (sMutationRate ea) newPopulation
       where
         reproduceWith' [x,y] = reproduceWith x y
