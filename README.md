@@ -34,6 +34,24 @@ In sexual reproduction mode, `weasel` generates a population of random DNA strin
 
 A tiny experiment like this requires a lot of fine print, and adding my own seems hardly necessary, but I was surprised by these results enough that I felt they deserved to be mentioned specially.
 
+### “Stuck” Characters
+
+Dawkins makes a lot of hay with the examples like the following:
+
+    Generation 030: METHINKS IT IS RIIZNA WYA EH (distance = 21)
+    Generation 031: METHINKS IT IV RIIZNA WYASEH (distance = 21)
+
+While `WYASEH` is one character improved over `WYA EH`, `IV` is one character worse than `IS`. None of the characters are “fixed in place” as one of his detractors apparently accused him of doing, but instances where the most-fit is worse than the one in the previous generation are much harder to come by. The characters are not pinned in place, but a mutation rate low enough can effectively pin the distance of the most-fit, which effectively pins the characters, modulo meaningless flip-flops like the above.
+
+Raising the mutation rate to, for instance, 20% makes examples like this one a lot more frequent:
+
+    Generation 198: KEKHGQKS BT ISRLIFE A WEWSEL (distance = 20)
+    Generation 199: KEKHGQKS BC ISRLIFE A WEESEL (distance = 19)
+
+The total fitness actually went down, presumably because none of the 100 weasels in the population were bumped less far from the destination. (You can let this one run for a while; I let one run for almost 5000 generations and it never got closer than 22.)
+
+There's a relationship between the mutation rate and the population size that bears some consideration. A population size of 1000 with a mutation rate of 20% works more like a population size of 100 with a mutation rate of about 10%. Then again, raising the population size to 1000 and keeping the mutation rate at 5% gets you convergence in about half the number of generations, and about half again in sexual reproduction mode. (I saw convergence in just 8 generations with a population of 1000 once).
+
 ### Effective Mutation Rates
 
 The 5% mutation rate does not seem to be as off-the-cuff as it seems in the problem description. The 5% rate produces useful results fairly quickly without preventing convergence. Even 10% seems to be high enough to make convergence unlikely. Note that with a 28-character string such as `METHINKS IT IS LIKE A WEASEL`, a 5% mutation rate will equate to 1.4 mutations per DNA sequence, which is enough to get some interesting variety, while a 10% mutation rate equates to 2.8. If you're one character from converging but your mutation rate is likely to change two characters, convergence is likely to be delayed.
