@@ -7,7 +7,7 @@ synopsis:            Weasel, a trivial evolutionary algorithm, as described by D
 -- description:         
 homepage:            http://www.bitbucket.org/fusiongyro/weasel
 license:             MIT
-license-file:        LICENSE
+license-file:        LICENSE.txt
 author:              Daniel Lyons
 maintainer:          fusion@storytotell.org
 -- copyright:           
@@ -16,7 +16,7 @@ build-type:          Simple
 cabal-version:       >=1.8
 
 executable weasel
-  -- main-is:             
+  main-is:             Main.hs
   -- other-modules:       
   build-depends:       base ==4.6.*, mtl ==2.1.*, random ==1.0.*
   hs-source-dirs:      src

@@ -1,6 +1,5 @@
 module Util where
 
-import Control.Monad (zipWithM)
 import Data.Char (ord,chr)
 import Data.Function (on)
 import Data.List (sortBy, tails)

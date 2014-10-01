@@ -1,5 +1,8 @@
 module Sexual where
 
+import Control.Monad (zipWithM)
+import System.Random (randomRIO, randomIO)
+
 import Util
 
 data SexualWeasel = SexyWeasel { sPopulation   :: Int
