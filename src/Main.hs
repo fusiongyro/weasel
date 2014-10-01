@@ -1,5 +1,10 @@
 module Main where
 
+import Control.Monad (void)
+import System.Console.GetOpt
+import System.Environment (getArgs, getProgName)
+import System.Exit (exitSuccess, exitFailure)
+
 import Util
 import Classic
 import Sexual
@@ -35,7 +40,7 @@ commandLineOptions = [
 helpOption, classicModeOption, sexyModeOption :: Parameters -> Parameters
 helpOption        opts = opts { pMode = HelpMode }
 classicModeOption opts = opts { pMode = ClassicMode }
-sexyModeOption    opts = opts { pMode = SexualReproductionMode }
+sexyModeOption    opts = opts { pMode = SexualMode }
 
 showHelp :: IO ()
 showHelp = do
@@ -63,11 +68,13 @@ main = do
 
 execute :: Parameters -> IO ()
 execute (Param {pMode = HelpMode}) = showHelp
-execute options@(Param {pTarget = target, pMode = ClassicMode}) = weaselEvolver (classicOptions options) target
-execute options@(Param {pTarget = target, pMode = SexualMode})  = weaselEvolver (sexualOptions options)  target
+execute options@(Param {pTarget = target, pMode = ClassicMode}) =
+  void $ weaselEvolver (classicOptions options) target
+execute options@(Param {pTarget = target, pMode = SexualMode})  = 
+  void $ weaselEvolver (sexualOptions options)  target
 
-classicOptions options@(Param {pPopulation = pop, pMutationRate = rate}) =
+classicOptions options@(Param {pTotalPopulation = pop, pMutationRate = rate}) =
   ClassicWeasel { cPopulation = pop, cMutationRate = rate }
 
-sexualOptions options@(Param {pPopulation = pop, pMutationRate = rate, pFitCutoff = fit}) =
-  SexualWeasel { sPopulation = pop, sMutationRate = rate, sFitCutoff = fit }
+sexualOptions options@(Param {pTotalPopulation = pop, pMutationRate = rate, pFitCutoff = fit}) =
+  SexyWeasel { sPopulation = pop, sMutationRate = rate, sFitCutoff = fit }
