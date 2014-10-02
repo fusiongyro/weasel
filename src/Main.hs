@@ -29,13 +29,27 @@ defaultParameters = Param { pTotalPopulation = 100
 
 commandLineOptions :: [OptDescr (Parameters -> Parameters)]
 commandLineOptions = [
-  Option "h" ["help"]          (NoArg  helpOption)                      "show this help, then exit",
-  Option "p" ["population"]    (ReqArg populationOption   "POPULATION") "the number of organisms to keep per generation",
-  Option "t" ["target"]        (ReqArg targetOption       "TARGET")     "the target string of DNA to shoot for",
-  Option "f" ["fit-cutoff"]    (ReqArg cutoffOption       "CUTOFF")     "the number of organisms to consider 'fit' for reproduction",
-  Option "r" ["mutation-rate"] (ReqArg mutationRateOption "RATE")       "the mutation rate to use (e.g.: 0.05)",
-  Option "c" ["classic-mode"]  (NoArg  classicModeOption)               "use classic mode",
-  Option "s" ["sexy-mode"]     (NoArg  sexyModeOption)                  "use sexual reproduction mode"]
+  Option "h" ["help"]
+    (NoArg helpOption)
+    "show this help, then exit",
+  Option "p" ["population"]
+    (ReqArg populationOption "POPULATION")
+    "the number of organisms to keep per generation",
+  Option "t" ["target"]
+    (ReqArg targetOption "TARGET")
+    "the target string of DNA to shoot for",
+  Option "f" ["fit-cutoff"]
+    (ReqArg cutoffOption "CUTOFF")
+    "the number of organisms to consider 'fit' for reproduction",
+  Option "r" ["mutation-rate"]
+    (ReqArg mutationRateOption "RATE")
+    "the mutation rate to use (e.g.: 0.05)",
+  Option "c" ["classic-mode"]
+    (NoArg  classicModeOption)
+    "use classic mode",
+  Option "s" ["sexy-mode"]
+    (NoArg  sexyModeOption)
+    "use sexual reproduction mode"]
 
 helpOption, classicModeOption, sexyModeOption :: Parameters -> Parameters
 helpOption        opts = opts { pMode = HelpMode }
@@ -48,7 +62,8 @@ showHelp = do
   putStrLn $ usageInfo ("Usage: " ++ prog ++ " [OPTIONS]...") commandLineOptions
   exitSuccess
 
-populationOption, targetOption, cutoffOption, mutationRateOption, modeOption :: String -> Parameters -> Parameters
+populationOption, targetOption, cutoffOption :: String -> Parameters -> Parameters
+mutationRateOption, modeOption :: String -> Parameters -> Parameters
 populationOption   value p = p { pTotalPopulation = read value } 
 targetOption       value p = p { pTarget          = value      }
 cutoffOption       value p = p { pFitCutoff       = read value }
@@ -73,8 +88,11 @@ execute options@(Param {pTarget = target, pMode = ClassicMode}) =
 execute options@(Param {pTarget = target, pMode = SexualMode})  = 
   void $ weaselEvolver (sexualOptions options)  target
 
-classicOptions options@(Param {pTotalPopulation = pop, pMutationRate = rate}) =
+classicOptions options@(Param {pTotalPopulation = pop,
+                               pMutationRate    = rate}) =
   ClassicWeasel { cPopulation = pop, cMutationRate = rate }
 
-sexualOptions options@(Param {pTotalPopulation = pop, pMutationRate = rate, pFitCutoff = fit}) =
+sexualOptions options@(Param {pTotalPopulation = pop,
+                              pMutationRate    = rate,
+                              pFitCutoff       = fit}) =
   SexyWeasel { sPopulation = pop, sMutationRate = rate, sFitCutoff = fit }
