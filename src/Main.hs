@@ -64,11 +64,11 @@ showHelp = do
 
 populationOption, targetOption, cutoffOption :: String -> Parameters -> Parameters
 mutationRateOption, modeOption :: String -> Parameters -> Parameters
-populationOption   value p = p { pTotalPopulation = read value } 
-targetOption       value p = p { pTarget          = value      }
-cutoffOption       value p = p { pFitCutoff       = read value }
-mutationRateOption value p = p { pMutationRate    = read value }
-modeOption         value p = p { pMode            = read value }
+populationOption   value p = p { pTotalPopulation = read     value } 
+targetOption       value p = p { pTarget          = sanitize value }
+cutoffOption       value p = p { pFitCutoff       = read     value }
+mutationRateOption value p = p { pMutationRate    = read     value }
+modeOption         value p = p { pMode            = read     value }
 
 parseOptions :: [String] -> IO Parameters
 parseOptions args = do

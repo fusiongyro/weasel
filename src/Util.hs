@@ -1,6 +1,6 @@
 module Util where
 
-import Data.Char (ord,chr)
+import Data.Char (ord,chr,toUpper,isAlpha)
 import Data.Function (on)
 import Data.List (sortBy, tails)
 import Text.Printf (printf)
@@ -12,33 +12,34 @@ class EvolutionaryAlgorithm a where
   -- | Generates an initial population suitable for this algorithm.
   generatePopulation :: a -> Int -> IO [DNA]
 
-  -- | Selects the fittest members of this population according to the algorithm.
+  -- | Selects the fittest members of this population according to the
+  -- algorithm.
   selectFittest      :: a -> DNA -> [DNA] -> IO [DNA]
 
-  -- | Breeds the fittest members of the population using the algorithm.
+  -- | Breeds the fittest members of the population using the
+  -- algorithm.
   breed              :: a -> [DNA] -> IO [DNA]
-
 
 -- | Logs a status message for the current state of affairs.
 logStatus :: Int -> DNA -> [DNA] -> IO ()
 logStatus n target (fittest:_) =
   printf "Generation %03d: %s (distance = %d)\n" n fittest (fitnessTo target fittest)
 
--- Random utilities
+-- | Lets us pretend we have a base-27 encoding where the final code
+-- is for the space.
 charFor :: Int -> Char
 charFor 26 = ' '
 charFor i = (chr (ord 'A' + i))
 
--- The randomChar function gives us a random character in the range we want.
-
+-- | The randomChar function gives us a random character in the range
+-- we want.
 randomChar :: IO Char
 randomChar = do
   i <- randomRIO (0,26)
   return $ charFor i
 
--- The `randomString` function generates a completely random string,
--- containing just the 26 uppercase alphabetic characters and the space.
-
+-- | Generates a completely random string containing just the 26
+-- uppercase alphabetic characters and the space.
 randomString :: Int -> IO String
 randomString 0         = return ""
 randomString n | n > 0 = do
@@ -46,11 +47,18 @@ randomString n | n > 0 = do
   s <- randomString (n-1)
   return $ c : s
 
--- Step #1 is the randomDNA function:
-
+-- | Generates a completely random DNA snippet of the requested
+-- length.
 randomDNA :: Int -> IO DNA
 randomDNA length = randomString length
 
+-- | Removes any untoward characters and ensures that alphabetic
+-- characters are uppercase. This can be used to sanitize target DNA
+-- sequences.
+sanitize :: DNA -> DNA
+sanitize = filter inRange . map toUpper
+  where
+    inRange x = isAlpha x || x == ' '
 
 -- | The common entry point to the evolutionary algorithm
 weaselEvolver :: (EvolutionaryAlgorithm ea) => ea -> DNA -> IO Int
