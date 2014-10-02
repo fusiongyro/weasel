@@ -35,9 +35,6 @@ commandLineOptions = [
   Option "p" ["population"]
     (ReqArg populationOption "POPULATION")
     "the number of organisms to keep per generation",
-  Option "t" ["target"]
-    (ReqArg targetOption "TARGET")
-    "the target string of DNA to shoot for",
   Option "f" ["fit-cutoff"]
     (ReqArg cutoffOption "CUTOFF")
     "the number of organisms to consider 'fit' for reproduction",
@@ -59,13 +56,13 @@ sexyModeOption    opts = opts { pMode = SexualMode }
 showHelp :: IO ()
 showHelp = do
   prog <- getProgName
-  putStrLn $ usageInfo ("Usage: " ++ prog ++ " [OPTIONS]...") commandLineOptions
+  putStrLn $ usageInfo ("Usage: " ++ prog ++ " [OPTIONS]... [TARGET STRING]")
+    commandLineOptions
   exitSuccess
 
-populationOption, targetOption, cutoffOption :: String -> Parameters -> Parameters
+populationOption, cutoffOption :: String -> Parameters -> Parameters
 mutationRateOption, modeOption :: String -> Parameters -> Parameters
 populationOption   value p = p { pTotalPopulation = read     value } 
-targetOption       value p = p { pTarget          = sanitize value }
 cutoffOption       value p = p { pFitCutoff       = read     value }
 mutationRateOption value p = p { pMutationRate    = read     value }
 modeOption         value p = p { pMode            = read     value }
@@ -73,14 +70,25 @@ modeOption         value p = p { pMode            = read     value }
 parseOptions :: [String] -> IO Parameters
 parseOptions args = do
   case getOpt RequireOrder commandLineOptions args of
-    (opts, args',   []) -> return $ foldl (flip ($)) defaultParameters opts
+    (opts, args',   []) -> return $ interpretOptions opts args'
     (   _,     _, errs) -> putStrLn (concat errs) >> exitFailure
 
-main = do
-  args <- getArgs
-  options <- parseOptions args
-  execute options
+interpretOptions :: [(Parameters -> Parameters)] -> [String] -> Parameters
+interpretOptions opts args = processedParameters { pTarget = target }
+  where
+    -- the fold here applies each of the selected parameter mutators
+    -- in turn to the default parameters to make them into the
+    -- parameters the user selected
+    processedParameters = foldl (flip ($)) defaultParameters opts
 
+    -- if the user supplied arguments, combine them all into nice new
+    -- target string; otherwise keep the default
+    target = if args == []
+               then pTarget defaultParameters
+               else sanitize $ unwords args
+
+-- | Executes the appropriate computation based on the command line
+-- argument structure that was given to us.
 execute :: Parameters -> IO ()
 execute (Param {pMode = HelpMode}) = showHelp
 execute options@(Param {pTarget = target, pMode = ClassicMode}) =
@@ -88,11 +96,22 @@ execute options@(Param {pTarget = target, pMode = ClassicMode}) =
 execute options@(Param {pTarget = target, pMode = SexualMode})  = 
   void $ weaselEvolver (sexualOptions options)  target
 
+-- | Convert the parameters to a ClassicWeasel simulation
+classicOptions :: Parameters -> ClassicWeasel
 classicOptions options@(Param {pTotalPopulation = pop,
                                pMutationRate    = rate}) =
   ClassicWeasel { cPopulation = pop, cMutationRate = rate }
 
+-- | Convert the parameters to a SexualWeasel simulation
+sexualOptions :: Parameters -> SexualWeasel
 sexualOptions options@(Param {pTotalPopulation = pop,
                               pMutationRate    = rate,
                               pFitCutoff       = fit}) =
   SexyWeasel { sPopulation = pop, sMutationRate = rate, sFitCutoff = fit }
+
+-- Parse the input and then hand it off to the execute method.
+main = do
+  args <- getArgs
+  options <- parseOptions args
+  execute options
+
