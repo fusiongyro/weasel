@@ -10,7 +10,10 @@ data SexualWeasel = SexyWeasel { sPopulation   :: Int
                                , sFitCutoff    :: Int }
                     deriving (Show, Eq)
 
-defaultSexualWeasel = SexyWeasel { sPopulation = 100, sMutationRate = 0.05, sFitCutoff = 20 }
+defaultSexualWeasel = SexyWeasel {
+  sPopulation   = 100,
+  sMutationRate = 0.05,
+  sFitCutoff    = 20 }
 
 instance EvolutionaryAlgorithm SexualWeasel where
   generatePopulation ea length = 
