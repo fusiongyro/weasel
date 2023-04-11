@@ -2,7 +2,7 @@
 -- documentation, see http://haskell.org/cabal/users-guide/
 
 name:                weasel
-version:             1.0.0
+version:             1.0.1
 synopsis:            Weasel, a trivial evolutionary algorithm, as described by Dawkins
 -- description:         
 homepage:            http://www.bitbucket.org/fusiongyro/weasel
@@ -18,6 +18,6 @@ cabal-version:       >=1.8
 executable weasel
   main-is:             Main.hs
   other-modules:       Classic Sexual Util
-  build-depends:       base ==4.16.*, mtl ==2.3.*, random ==1.0.*
+  build-depends:       base ==4.16.4.0, mtl ==2.2.2, random ==1.2.1.1
   hs-source-dirs:      src
   ghc-options:         -rtsopts

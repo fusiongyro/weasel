@@ -1,46 +1,43 @@
+# SPDX-FileCopyrightText: 2021 Serokell <https://serokell.io/>
+#
+# SPDX-License-Identifier: CC0-1.0
+
 {
+  description = "My haskell application";
+
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
-    flake-parts.url = "github:hercules-ci/flake-parts";
-    haskell-flake.url = "github:srid/haskell-flake";
+    nixpkgs.url = "github:NixOS/nixpkgs";
+    flake-utils.url = "github:numtide/flake-utils";
   };
-  outputs = inputs@{ self, nixpkgs, flake-parts, ... }:
-    flake-parts.lib.mkFlake { inherit inputs; } {
-      systems = nixpkgs.lib.systems.flakeExposed;
-      imports = [ inputs.haskell-flake.flakeModule ];
 
-      perSystem = { self', pkgs, ... }: {
+  outputs = { self, nixpkgs, flake-utils }:
+    flake-utils.lib.eachDefaultSystem (system:
+      let
+        pkgs = nixpkgs.legacyPackages.${system};
 
-        # Typically, you just want a single project named "default". But
-        # multiple projects are also possible, each using different GHC version.
-        haskellProjects.default = {
-          # If you have a .cabal file in the root, this option is determined
-          # automatically. Otherwise, specify all your local packages here.
-          # packages.example.root = ./.;
+        haskellPackages = pkgs.haskellPackages;
 
-          # The base package set representing a specific GHC version.
-          # By default, this is pkgs.haskellPackages.
-          # You may also create your own. See https://haskell.flake.page/package-set
-          # basePackages = pkgs.haskellPackages;
+        jailbreakUnbreak = pkg:
+          pkgs.haskell.lib.doJailbreak (pkg.overrideAttrs (_: { meta = { }; }));
 
-          # Dependency overrides go here. See https://haskell.flake.page/dependency
-          # source-overrides = { };
-          # overrides = self: super: { };
+        packageName = "weasel";
+      in {
+        packages.${packageName} =
+          haskellPackages.callCabal2nix packageName self rec {
+            # Dependency overrides go here
+          };
 
-          # devShell = {
-          #  # Enabled by default
-          #  enable = true;  
-          #
-          #  # Programs you want to make available in the shell.
-          #  # Default programs can be disabled by setting to 'null'
-          #  tools = hp: { fourmolu = hp.fourmolu; ghcid = null; };
-          #
-          #  hlsCheck.enable = true;
-          # };
+        packages.default = self.packages.${system}.${packageName};
+        defaultPackage = self.packages.${system}.default;
+
+        devShells.default = pkgs.mkShell {
+          buildInputs = with pkgs; [
+            haskellPackages.haskell-language-server # you must build it with your ghc to work
+            ghcid
+            cabal-install
+          ];
+          inputsFrom = map (__getAttr "env") (__attrValues self.packages.${system});
         };
-
-        # haskell-flake doesn't set the default package, but you can do it here.
-        packages.default = self'.packages.weasel;
-      };
-    };
+        devShell = self.devShells.${system}.default;
+      });
 }
